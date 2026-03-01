@@ -6,9 +6,11 @@ import os
 load_dotenv()
 
 class Analisador(BaseModel):
+    nome : str = Field(description="Nome do candidato")
+    telefone : str = Field(description="Telefone ou meio de contato do candidato")
     resumoCurriculo : str = Field(description="Resumo do curriculo em 100 ou menos palavras")
-    pontos_fortes : str = Field(description="Pontos fortes do currículo")
-    pontos_fracos : str = Field(description="Pontos fracos do currículo")
+    pontos_fortes : str = Field(description="3 Pontos fortes do currículo")
+    pontos_fracos : str = Field(description="3 Pontos fracos do currículo")
     nota : float = Field(description="Nota de 0 a 10.")
 
 model = OpenAIChat(id="gpt-4o", name= "analisador", api_key=os.getenv("OPENAI_API_KEY"))
@@ -21,5 +23,5 @@ analisadorCurriculo = Agent(
     sendo imparcial e verdadeiro. Ao final da sua análise, dê uma nota de 0 a 10, sendo 10 
     perfeito para o trabalho e 0 sendo o oposto do que a empresa busca.
 """,
-response_model=Analisador
+output_schema=Analisador
 )

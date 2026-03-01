@@ -119,15 +119,6 @@ main.py
 
 ---
 
-## 💡 Possíveis melhorias futuras
-
-- Interface web com [Streamlit](https://streamlit.io/) para upload do PDF via browser
-- Suporte a múltiplos currículos em batch
-- Comparação com múltiplas vagas simultaneamente
-- Geração de relatório em PDF com o resultado da análise
-
----
-
 ## 📄 Licença
 
 MIT License — sinta-se livre para usar, modificar e distribuir.
