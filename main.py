@@ -1,9 +1,13 @@
 from pypdf import PdfReader
 from agent import analisadorCurriculo
 import uvicorn
-from typing import List, Annotated
-from fastapi import FastAPI, File, UploadFile
+from typing import List
+from fastapi import FastAPI, File, UploadFile, HTTPException
 from io import BytesIO
+import os
+
+from fastapi.middleware.cors import CORSMiddleware
+
 
 app = FastAPI(
     title="API DO JP",
@@ -14,10 +18,18 @@ app = FastAPI(
         "email" : "joao@example.com"
     })
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 def descricao_vaga():
-    with open("vaga.txt", "r") as file:
-        content = file.read()
-    return content
+    if not os.path.exists("vaga.txt"):
+        raise HTTPException(500, "Arquivo vaga.txt não encontrado")
+    with open("vaga.txt", "r", encoding="utf-8") as file:
+        return file.read()
 
 def processar_pdfs(lista : list):
     allCVs = []
@@ -25,34 +37,40 @@ def processar_pdfs(lista : list):
         reader = PdfReader(curriculo)
         text_from_all_pages = []
         for page in reader.pages:
-            text_from_all_pages.append(page.extract_text())
+            text_from_all_pages.append(page.extract_text() or "")
         curriculoEmString = " ".join(text_from_all_pages)
         allCVs.append(curriculoEmString)
     return allCVs
 
 @app.post("/sendCV/")
 async def create_upload_files(files: List[UploadFile] = File(...)):
+    if not files:
+        raise HTTPException(400, "Nenhum arquivo enviado")
+
     pdfs = []
     for file in files:
+        if file.content_type != "application/pdf":
+            raise HTTPException(400, f"'{file.filename}' nao e um PDF valido")
         arquivos_bytes = await file.read()
-        pdf_em_memoria = BytesIO(arquivos_bytes)
-        pdfs.append(pdf_em_memoria)
+        pdfs.append(BytesIO(arquivos_bytes))
+
     pdfs_processados = processar_pdfs(pdfs)
     analise = []
     vaga = descricao_vaga()
 
-    for cv in pdfs_processados:
+    for i, cv in enumerate(pdfs_processados):
         mensagem = f"Currículo: {cv}\n\nDescrição da vaga: {vaga}"
-        msg = analisadorCurriculo.run(mensagem).content
-        analise.append(msg)
-    
-    ranking = sorted(analise, key=lambda candidato: candidato.nota, reverse=True)  
-    return  [{"nome": candidato.nome,
-            "telefone": candidato.telefone,
-            "nota": candidato.nota,
-            "resumo do curriculo": candidato.resumoCurriculo,
-            "pontos fortes": candidato.pontos_fortes,
-            "pontos fracos": candidato.pontos_fracos} for candidato in ranking]
+        try:
+            msg = analisadorCurriculo.run(mensagem).content
+            analise.append(msg)
+        except Exception as e:
+            print(f"Erro ao processar currículo {i}: {e}")
+
+    ranking = sorted(analise, key=lambda c: c.nota, reverse=True)
+    return [{"nome": c.nome, "telefone": c.telefone, "nota": c.nota,
+             "resumo do curriculo": c.resumoCurriculo,
+             "pontos fortes": c.pontos_fortes,
+             "pontos fracos": c.pontos_fracos} for c in ranking]
 
 
 if __name__ == "__main__":

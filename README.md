@@ -79,7 +79,7 @@ Ou acessa `http://127.0.0.1:8000/docs` pra usar a interface do Swagger.
     "nota": 6.2,
     "resumo do curriculo": "Analista de sistemas com foco em backend Java e experiência em bancos de dados relacionais.",
     "pontos fortes": "Boa base em desenvolvimento backend e banco de dados.",
-    "pontos fracos": "Stack diferente da exigida na vaga e sem experiência com Python ou IA."
+    "pontos fracos": "Stack diferente da exigida na vaga e sem experiência com Python ou IA." 
   }
 ]
 ```
