@@ -31,15 +31,16 @@ def descricao_vaga():
     with open("vaga.txt", "r", encoding="utf-8") as file:
         return file.read()
 
-def processar_pdfs(lista : list):
+def processar_pdfs(lista: list):
     allCVs = []
-    for curriculo in lista:
-        reader = PdfReader(curriculo)
-        text_from_all_pages = []
-        for page in reader.pages:
-            text_from_all_pages.append(page.extract_text() or "")
-        curriculoEmString = " ".join(text_from_all_pages)
-        allCVs.append(curriculoEmString)
+    for i, curriculo in enumerate(lista):
+        try:
+            reader = PdfReader(curriculo)
+            pages = [page.extract_text() or "" for page in reader.pages]
+            allCVs.append(" ".join(pages))
+        except Exception as e:
+            print(f"Erro ao ler PDF {i}: {e}")
+            allCVs.append("")  # mantém a posição na lista
     return allCVs
 
 @app.post("/sendCV/")
